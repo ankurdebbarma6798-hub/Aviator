@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Aviator & Color Win - Premium Edition</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            background-color: #090a10;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            width: 100%;
+            max-width: 480px;
+            background: #141622;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #23273a;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .user-id-tag {
+            font-weight: 600;
+            font-size: 13px;
+            color: #98a1c0;
+        }
+        .user-id-tag span { color: #00ffcc; }
+
+        .balance-box {
+            background: #090a0f;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid #2c3149;
+            font-weight: bold;
+            color: #28a745;
+            font-size: 15px;
+        }
+
+        /* Container Viewports */
+        .screen-viewport {
+            width: 100%;
+            max-width: 480px;
+            padding: 12px;
+            display: none;
+            flex-direction: column;
+        }
+        .screen-viewport.active { display: flex; }
+
+        h2 { font-size: 18px; margin-bottom: 12px; font-weight: 700; color: #fff; }
+        
+        .panel-card {
+            background: #141622;
+            border: 1px solid #23273a;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        /* -------------------------------------
+           PROFESSIONAL AVIATOR CANVAS UI
+        ------------------------------------- */
+        .aviator-display-frame {
+            position: relative;
+            width: 100%;
+            height: 230px;
+            background: radial-gradient(circle at 5% 95%, #241116 0%, #0c0d14 85%);
+            border-radius: 12px;
+            border: 1px solid #3a151d;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        #aviatorCanvas { width: 100%; height: 100%; display: block; }
+        
+        .av-central-ticker {
+            position: absolute;
+            top: 45%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 52px; font-weight: 900; text-align: center; pointer-events: none;
+            font-family: 'Impact', sans-serif; letter-spacing: 1px;
+        }
+        .av-countdown-banner {
+            position: absolute; top: 68%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 13px; font-weight: bold; color: #ffc107; text-transform: uppercase;
+            background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 20px; pointer-events: none;
+        }
+
+        /* -------------------------------------
+           BETTING CONTROL UNITS
+        ------------------------------------- */
+        .bet-control-layout { display: flex; flex-direction: column; gap: 10px; }
+        
+        .input-stepper {
+            display: flex; align-items: center; background: #090a0f; border-radius: 8px; border: 1px solid #2c3149; padding: 4px;
+        }
+        .input-stepper input {
+            flex: 1; background: transparent; border: none; color: white; text-align: center; font-size: 18px; font-weight: bold; outline: none;
+        }
+        .input-stepper button {
+            width: 38px; height: 38px; background: #23273a; border: none; color: white; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer;
+        }
+
+        .primary-action-btn {
+            width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: filter 0.1s;
+        }
+        .primary-action-btn:active { filter: brightness(0.85); }
+        .btn-bet-state { background: #28a745; color: white; box-shadow: 0 4px 12px rgba(40,167,69,0.3); }
+        .btn-cashout-state { background: #ffc107; color: black; box-shadow: 0 4px 15px rgba(255,193,7,0.4); }
+        .btn-cancel-state { background: #5a6268; color: white; }
+        .btn-disabled-state { background: #1c1e2e; color: #495057; cursor: not-allowed; }
+
+        /* History badge logging lines */
+        .badge-scroll-line { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0; margin-bottom: 10px; }
+        .badge-pill { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; background: #1c1e2e; color: #98a1c0; flex-shrink: 0; }
+        .badge-high { color: #9c27b0; background: rgba(156, 39, 176, 0.2); }
+        .badge-med { color: #2196f3; background: rgba(33, 150, 243, 0.2); }
+
+        /* Dynamic Multiplayer Scrolling Logs */
+        .multiplayer-log-box { width: 100%; max-height: 140px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .log-row { display: flex; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 6px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #23273a; }
+        .log-row.won { border-left-color: #28a745; background: rgba(40,167,69,0.05); }
+        .log-win-text { color: #28a745; font-weight: bold; }
+
+        /* -------------------------------------
+           COLOR PREDICTION LAYOUTS
+        ------------------------------------- */
+        .cp-timer-panel { display: flex; justify-content: space-between; align-items: center; background: #090a0f; padding: 12px; border-radius: 8px; border: 1px solid #23273a; margin-bottom: 12px; }
+        .cp-clock { font-size: 22px; font-weight: bold; color: #ffc107; }
+        
+        .cp-grid-3 { display: flex; gap: 8px; margin-bottom: 12px; }
+        .cp-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; color: white; cursor: pointer; text-transform: uppercase; }
+        .cp-green { background: #28a745; }
+        .cp-violet { background: #6f42c1; }
+        .cp-red { background: #dc3545; }
+
+        .cp-grid-10 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+        .cp-num-btn { background: #1c1e2e; border: 1px solid #2c3149; color: #fff; padding: 8px 0; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        /* Color History Log Cards */
+        .color-history-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; color: white; flex-shrink: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
+
+        /* -------------------------------------
+           FIXED BOTTOM NAVIGATION MENU BAR
+        ------------------------------------- */
+        .footer-nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: #141622; border-top: 1px solid #23273a; display: flex; justify-content: space-around; align-items: center; z-index: 999; }
+        .nav-link { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: none; color: #6c757d; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .nav-link.active { color: #00ffcc; }
+        .nav-link svg { width: 22px; height: 22px; fill: currentColor; }
+
+        /* Admin Dashboard Components */
+        .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+        .admin-table th, .admin-table td { border: 1px solid #2c3149; padding: 8px; text-align: left; }
+    </style>
+</head>
+<body>
+
+    <div class="top-navbar">
+        <div class="user-id-tag">UID: <span id="ui-profile-id">Loading...</span></div>
+        <div class="balance-box">₹<span id="ui-balance-val">1000</span></div>
+    </div>
+
+    <div id="view-aviator" class="screen-viewport active">
+        <div class="badge-scroll-line" id="av-history-badges"></div>
+        <div class="aviator-display-frame">
+            <canvas id="aviatorCanvas" width="480" height="230"></canvas>
+            <div class="av-central-ticker" id="av-multiplier-text">1.00x</div>
+            <div class="av-countdown-banner" id="av-countdown-banner-text">Next Round Commencing</div>
+        </div>
+        <div class="panel-card">
+            <div class="bet-control-layout">
+                <div class="input-stepper">
+                    <button onclick="modifyStake('av', -50)">-</button>
+                    <input type="number" id="av-stake-input" value="100">
+                    <button onclick="modifyStake('av', 50)">+</button>
+                </div>
+                <button id="av-main-btn" class="primary-action-btn btn-bet-state" onclick="handleAviatorBetAction()">Place Flight Stake</button>
+            </div>
+        </div>
+        <div class="panel-card">
+            <h3 style="font-size: 13px; margin-bottom: 8px; color: #98a1c0;">Live Room Player Logs</h3>
+            <div class="multiplayer-log-box" id="av-live-player-logs"></div>
+        </div>
+    </div>
+
+    <div id="view-color" class="screen-viewport">
+        <div class="cp-timer-panel">
+            <div>
+                <p style="font-size: 11px; color:#6c757d;">Period Index Vector</p>
+                <h4 id="cp-period-id" style="font-weight: 800;">2026031201</h4>
+            </div>
+            <div>
+                <p style="font-size: 11px; color:#6c757d; text-align:right;">Lock Countdown</p>
+                <div class="cp-clock" id="cp-clock-text">00:30</div>
+            </div>
+        </div>
+
+        <div class="panel-card" style="padding: 12px;">
+            <div class="cp-grid-3">
+                <button class="cp-btn cp-green" onclick="selectPredictionFocus('green')">Green</button>
+                <button class="cp-btn cp-violet" onclick="selectPredictionFocus('violet')">Violet</button>
+                <button class="cp-btn cp-red" onclick="selectPredictionFocus('red')">Red</button>
+            </div>
+            <div class="cp-grid-10">
+                <button class="cp-num-btn" onclick="selectPredictionFocus(0)">0</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(1)">1</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(2)">2</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(3)">3</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(4)">4</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(5)">5</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(6)">6</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(7)">7</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(8)">8</button>
+                <button class="cp-num-btn" onclick="selectPredictionFocus(9)">9</button>
+            </div>
+            <div class="bet-control-layout">
+                <p style="font-size: 12px; text-align:center; color:#ffc107;">Target Selected Focus: <span id="cp-target-selection" style="font-weight: 900; text-transform:uppercase;">None</span></p>
+                <div class="input-stepper">
+                    <button onclick="modifyStake('cp', -50)">-</button>
+                    <input type="number" id="cp-stake-input" value="100">
+                    <button onclick="modifyStake('cp', 50)">+</button>
+                </div>
+                <button id="cp-main-btn" class="primary-action-btn btn-bet-state" onclick="handleColorPredictionBetAction()">Lock Forecast Stake</button>
+            </div>
+        </div>
+
+        <div class="panel-card">
+            <h3 style="font-size: 13px; margin-bottom: 8px; color: #98a1c0;">Historical Outcome Records</h3>
+            <div class="badge-scroll-line" id="cp-history-badges"></div>
+        </div>
+    </div>
+
+    <div id="view-wallet" class="screen-viewport">
+        <h2>💳 Wallet Outflow Channel Settlements</h2>
+        <div class="panel-card">
+            <div class="bet-control-layout">
+                <input type="text" id="wallet-upi-input" placeholder="Enter UPI ID Address Pointer" style="background:#090a0f; border:1px solid #2c3149; color:white; padding:12px; border-radius:6px; font-weight:bold; outline:none;">
+                <input type="number" id="wallet-amount-input" placeholder="Amount (Minimum ₹500)" style="background:#090a0f; border:1px solid #2c3149; color:white; padding:12px; border-radius:6px; font-weight:bold; outline:none;">
+                <button class="primary-action-btn btn-bet-state" onclick="dispatchWithdrawalRequest()">File Outflow Settling Ticket</button>
+            </div>
+        </div>
+        <div class="panel-card">
+            <h3 style="font-size:13px; color:#98a1c0; margin-bottom:6px;">Your Network Affiliate Link</h3>
+            <div style="background:#090a0f; border:1px dashed #2c3149; padding:10px; border-radius:6px; text-align:center; word-break:break-all; font-size:11px; color:#00ffcc; font-weight:bold;" id="wallet-referral-text">Generating link...</div>
+        </div>
+    </div>
+
+    <div id="view-admin" class="screen-viewport">
+        <h2>🛡️ Operational Administrative Terminal</h2>
+        <div class="panel-card">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>User UID</th><th>Value Amount</th><th>Address Destination</th><th>Action</th></tr>
+                </thead>
+                <tbody id="admin-payout-rows"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="footer-nav-bar">
+        <button class="nav-link active" onclick="switchActiveTab('view-aviator', this)">
+            <svg viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5l8 2.5z"/></svg>
+            Aviator
+        </button>
+        <button class="nav-link" onclick="switchActiveTab('view-color', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.49 10 10-4.49 10-10 10zm0-18c-4.41 0-8 3.59-8 8s3.59 8 8 8 8-3.59 8-8-3.59-8-8-8zm0 11c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/></svg>
+            Color Prediction
+        </button>
+        <button class="nav-link" onclick="switchActiveTab('view-wallet', this)">
+            <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+            Wallet
+        </button>
+        <button class="nav-link" onclick="switchActiveTab('view-admin', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+            Admin Ops
+        </button>
+    </div>
+
+    <script>
+        // Local Device Profiles Synchronization Configuration Engine
+        const tg = window.Telegram.WebApp;
+        tg.ready(); tg.expand();
+
+        let profileId = localStorage.getItem('av_prof_id') || "UID" + Math.floor(100000 + Math.random()*900000);
+        localStorage.setItem('av_prof_id', profileId);
+        document.getElementById('ui-profile-id').innerText = profileId;
+
+        let walletBalance = parseFloat(localStorage.getItem('av_wallet_bal') || "2000");
+        let activeCashoutRequests = JSON.parse(localStorage.getItem('av_cashout_data') || "[]");
+        updateUIWalletData();
+
+        document.getElementById('wallet-referral-text').innerText = `https://t.me/your_bot_username/play?startapp=${profileId}`;
+
+        function updateUIWalletData() {
+            document.getElementById('ui-balance-val').innerText = Math.floor(walletBalance);
+            localStorage.setItem('av_wallet_bal', walletBalance.toString());
+            localStorage.setItem('av_cashout_data', JSON.stringify(activeCashoutRequests));
+        }
+
+        function modifyStake(prefix, val) {
+            let inputNode = document.getElementById(`${prefix}-stake-input`);
+            let computed = parseInt(inputNode.value) + val;
+            if(computed < 10) computed = 10;
+            inputNode.value = computed;
+        }
+
+        function switchActiveTab(targetId, navLinkBtn) {
+            document.querySelectorAll('.screen-viewport').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.getElementById(targetId).classList.add('active');
+            navLinkBtn.classList.add('active');
+            if(targetId === 'view-admin') renderAdminPanel();
+        }
+
+        // =====================================================================
+        // AVIATOR CORE COMPLEX ENGINE
+        // =====================================================================
+        const canvas = document.getElementById("aviatorCanvas");
+        const ctx = canvas.getContext("2d");
+        
+        let avState = "WAITING"; // WAITING, IN_FLIGHT, CRASHED
+        let avMultiplier = 1.00;
+        let avCrashPoint = 1.00;
+        let avTimerValue = 5.0; // 5-Second Launch Timer
+        let playerStakedSum = 0;
+        let isPlayerInFlightRound = false;
+
+        // Dynamic multi-player simulation directory parameters
+        const botNames = ["Rajesh_FX", "CryptoArjun", "Karan_007", "Priya_Trade", "Vikram_S", "Sanjay_Kumar", "Amit_Bull"];
+        let roundBotsCollection = [];
+
+        function triggerAviatorLoopController() {
+            avState = "WAITING";
+            avMultiplier = 1.00;
+            avTimerValue = 5.0;
+            avCrashPoint = (Math.random() < 0.06) ? 1.00 : parseFloat((1.01 + Math.random() * 3.5).toFixed(2));
+            
+            document.getElementById('av-multiplier-text').innerText = "1.00x";
+            document.getElementById('av-multiplier-text').style.color = "#ffffff";
+            document.getElementById('av-countdown-banner-text').style.display = "block";
+
+            // Initialize simulated user entries
+            generateSimulatedRoomPlayers();
+
+            if (!isPlayerInFlightRound) {
+                document.getElementById('av-main-btn').innerText = "Place Flight Stake";
+                document.getElementById('av-main-btn').className = "primary-action-btn btn-bet-state";
+            }
+
+            // Execute 5-second countdown ticker sequence
+            let countdownInterval = setInterval(() => {
+                avTimerValue -= 0.1;
+                if(avTimerValue <= 0) {
+                    clearInterval(countdownInterval);
+                    commenceAviatorFlightAnimation();
+                } else {
+                    document.getElementById('av-countdown-banner-text').innerText = `Next Round in ${avTimerValue.toFixed(1)}s`;
+                    drawBaseGridArchitecture(0, false);
+                }
+            }, 100);
+        }
+
+        function commenceAviatorFlightAnimation() {
+            avState = "IN_FLIGHT";
+            document.getElementById('av-countdown-banner-text').style.display = "none";
+            
+            if(isPlayerInFlightRound) {
+                document.getElementById('av-main-btn').innerText = "CASH OUT NOW";
+                document.getElementById('av-main-btn').className = "primary-action-btn btn-cashout-state";
+            }
+
+            let startTimestamp = performance.now();
+
+            function updateFrame(now) {
+                if(avState !== "IN_FLIGHT") return;
+
+                let durationSec = (now - startTimestamp) / 1000;
+                avMultiplier = parseFloat((Math.pow(1.08, durationSec * 4.2)).toFixed(2));
+                document.getElementById('av-multiplier-text').innerText = avMultiplier.toFixed(2) + "x";
+
+                drawBaseGridArchitecture(durationSec, true);
+                processSimulatedBotCashouts(avMultiplier);
+
+                if(avMultiplier >= avCrashPoint) {
+                    avState = "CRASHED";
+                    document.getElementById('av-multiplier-text').innerText = "FLEW AWAY!";
+                    document.getElementById('av-multiplier-text').style.color = "#dc3545";
+                    
+                    injectHistoryBadge('av-history-badges', avCrashPoint.toFixed(2) + 'x', avCrashPoint >= 2 ? 'badge-high' : 'badge-med');
+                    
+                    isPlayerInFlightRound = false;
+                    playerStakedSum = 0;
+                    
+                    setTimeout(triggerAviatorLoopController, 3000);
+                } else {
+                    requestAnimationFrame(updateFrame);
+                }
+            }
+            requestAnimationFrame(updateFrame);
+        }
+
+        function handleAviatorBetAction() {
+            let stake = parseInt(document.getElementById('av-stake-input').value);
+            if(avState === "WAITING" && !isPlayerInFlightRound) {
+                if(walletBalance < stake) return alert("Insufficient available wallet balance!");
+                walletBalance -= stake;
+                playerStakedSum = stake;
+                isPlayerInFlightRound = true;
+                updateUIWalletData();
+                document.getElementById('av-main-btn').innerText = "Cancel Stake Alignment";
+                document.getElementById('av-main-btn').className = "primary-action-btn btn-cancel-state";
+            } else if(avState === "WAITING" && isPlayerInFlightRound) {
+                walletBalance += playerStakedSum;
+                isPlayerInFlightRound = false;
+                playerStakedSum = 0;
+                updateUIWalletData();
+                document.getElementById('av-main-btn').innerText = "Place Flight Stake";
+                document.getElementById('av-main-btn').className = "primary-action-btn btn-bet-state";
+            } else if(avState === "IN_FLIGHT" && isPlayerInFlightRound) {
+                let gain = Math.floor(playerStakedSum * avMultiplier);
+                walletBalance += gain;
+                isPlayerInFlightRound = false;
+                playerStakedSum = 0;
+                updateUIWalletData();
+                document.getElementById('av-main-btn').innerText = `Cashed Out +₹${gain}`;
+                document.getElementById('av-main-btn').className = "primary-action-btn btn-disabled-state";
+            }
+        }
+
+        function drawBaseGridArchitecture(timeFactor, drawPlane) {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            
+            // Render Background Alignment Spatial Coordinates Grid Lines
+            ctx.strokeStyle = "rgba(255,255,255,0.03)"; ctx.lineWidth = 1;
+            for(let i=0; i<canvas.width; i+=40) {
+                ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke();
+            }
+            for(let j=0; j<canvas.height; j+=40) {
+                ctx.beginPath(); ctx.moveTo(0,j); ctx.lineTo(canvas.width,j); ctx.stroke();
+            }
+
+            if(!drawPlane) return;
+
+            let startX = 30; let startY = canvas.height - 30;
+            let endX = Math.min(startX + (timeFactor * 26), canvas.width - 60);
+            let endY = Math.max(startY - (Math.pow(timeFactor, 1.7) * 10), 40);
+
+            // Vector Curve Fill Color Shader Gradient
+            let gradientFill = ctx.createLinearGradient(0, canvas.height, endX, endY);
+            gradientFill.addColorStop(0, "rgba(220,53,69,0)");
+            gradientFill.addColorStop(1, "rgba(220,53,69,0.18)");
+            ctx.fillStyle = gradientFill;
+            ctx.beginPath(); ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(startX + (endX - startX)/2, startY, endX, endY);
+            ctx.lineTo(endX, startY); ctx.closePath(); ctx.fill();
+
+            // Render Flight Path Stroke
+            ctx.strokeStyle = "#dc3545"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(startX, startY);
+            ctx.quadraticCurveTo(startX + (endX - startX)/2, startY, endX, endY);
+            ctx.stroke();
+
+            // Professional Red Aviator Aircraft Icon Canvas Geometry
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath(); ctx.arc(endX, endY, 6, 0, 2*Math.PI); ctx.fill();
+            ctx.fillStyle = "#dc3545";
+            ctx.beginPath(); ctx.moveTo(endX, endY);
+            ctx.lineTo(endX-18, endY+5); ctx.lineTo(endX-14, endY); ctx.lineTo(endX-18, endY-5);
+            ctx.closePath(); ctx.fill();
+        }
+
+        function generateSimulatedRoomPlayers() {
+            roundBotsCollection = [];
+            let wrapper = document.getElementById('av-live-player-logs');
+            wrapper.innerHTML = "";
+
+            botNames.forEach((name, idx) => {
+                let stakeVal = Math.floor(Math.random()*10 + 1)*100;
+                let autoTarget = parseFloat((1.1 + Math.random()*2.2).toFixed(2));
+                
+                roundBotsCollection.push({ name: name, stake: stakeVal, target: autoTarget, resolved: false });
+
+                let row = document.createElement('div');
+                row.className = "log-row";
+                row.id = `bot-log-${idx}`;
+                row.innerHTML = `<span>👤 ${name}</span><span>Staked ₹${stakeVal}</span>`;
+                wrapper.appendChild(row);
+            });
+        }
+
+        function processSimulatedBotCashouts(currentMult) {
+            roundBotsCollection.forEach((bot, idx) => {
+                if(!bot.resolved && currentMult >= bot.target) {
+                    bot.resolved = true;
+                    let targetRow = document.getElementById(`bot-log-${idx}`);
+                    if(targetRow) {
+                        targetRow.className = "log-row won";
+                        targetRow.innerHTML += `<span class="log-win-text">${bot.target}x (+₹${Math.floor(bot.stake*bot.target)})</span>`;
+                    }
+                }
+            });
+        }
+
+        function injectHistoryBadge(rowId, text, cssStyle) {
+            let row = document.getElementById(rowId);
+            let badg = document.createElement('div');
+            badg.className = `badge-pill ${cssStyle || ''}`;
+            badg.innerText = text;
+            row.prepend(badg);
+            if(row.children.length > 10) row.removeChild(row.lastChild);
+        }
+
+        // =====================================================================
+        // COLOR PREDICTION GAME LOOP ENGINE
+        // =====================================================================
+        let cpTimeClock = 30;
+        let cpActivePeriodId = 2026031201;
+        let cpUserSelectedFocus = null;
+
+        function selectPredictionFocus(focusVal) {
+            cpUserSelectedFocus = focusVal;
+            document.getElementById('cp-target-selection').innerText = focusVal;
+        }
+
+        function handleColorPredictionBetAction() {
+            if(cpUserSelectedFocus === null) return alert("Please select a target color or number first!");
+            let amt = parseInt(document.getElementById('cp-stake-input').value);
+            if(walletBalance < amt) return alert("Insufficient available balance parameters!");
+
+            walletBalance -= amt;
+            updateUIWalletData();
+
+            let activeTicket = { period: cpActivePeriodId, target: cpUserSelectedFocus, stake: amt };
+            localStorage.setItem('pending_cp_ticket', JSON.stringify(activeTicket));
+
+            document.getElementById('cp-main-btn').innerText = "Forecast Locked In";
+            document.getElementById('cp-main-btn').className = "primary-action-btn btn-disabled-state";
+        }
+
+        function initializeColorPredictionLoop() {
+            setInterval(() => {
+                cpTimeClock--;
+                if(cpTimeClock <= 0) {
+                    processColorRoundSettlement();
+                    cpTimeClock = 30;
+                    cpActivePeriodId++;
+                    document.getElementById('cp-period-id').innerText = cpActivePeriodId;
+                    document.getElementById('cp-main-btn').innerText = "Lock Forecast Stake";
+                    document.getElementById('cp-main-btn').className = "primary-action-btn btn-bet-state";
+                }
+                let formatSecs = cpTimeClock < 10 ? "0" + cpTimeClock : cpTimeClock;
+                document.getElementById('cp-clock-text').innerText = `00:${formatSecs}`;
+            }, 1000);
+        }
+
+        function processColorRoundSettlement() {
+            let outputNum = Math.floor(Math.random() * 10);
+            let colorsMapped = [];
+            
+            if([1,3,7,9].includes(outputNum)) colorsMapped.push('green');
+            else if([2,4,6,8].includes(outputNum)) colorsMapped.push('red');
+            else if(outputNum === 0) colorsMapped.push('red', 'violet');
+            else if(outputNum === 5) colorsMapped.push('green', 'violet');
+
+            let leadColor = colorsMapped[0];
+            
+            // Build historical graphic visual elements showing what number/color cooked result
+            let historyWrapper = document.getElementById('cp-history-badges');
+            let circle = document.createElement('div');
+            circle.className = `color-history-circle`;
+            circle.style.background = leadColor === 'green' ? '#28a745' : (colorsMapped.includes('violet') ? '#6f42c1' : '#dc3545');
+            circle.innerHTML = `<span>${outputNum}</span>`;
+            historyWrapper.prepend(circle);
+            if(historyWrapper.children.length > 10) historyWrapper.removeChild(historyWrapper.lastChild);
+
+            // Calculate user wager outcome processing
+            let savedTicketRaw = localStorage.getItem('pending_cp_ticket');
+            if(savedTicketRaw) {
+                let ticket = JSON.parse(savedTicketRaw);
+                localStorage.removeItem('pending_cp_ticket');
+
+                if(ticket.period === cpActivePeriodId) {
+                    let win = false;
+                    let payoutMultiplier = 0;
+
+                    if(typeof ticket.target === 'string' && colorsMapped.includes(ticket.target)) {
+                        win = true;
+                        payoutMultiplier = ticket.target === 'violet' ? 4.5 : 2;
+                    } else if(typeof ticket.target === 'number' && ticket.target === outputNum) {
+                        win = true;
+                        payoutMultiplier = 9;
+                    }
+
+                    if(win) {
+                        let totalReturns = Math.floor(ticket.stake * payoutMultiplier);
+                        walletBalance += totalReturns;
+                        updateUIWalletData();
+                        alert(`Prediction Success! Winner. +₹${totalReturns}`);
+                    } else {
+                        alert(`Round Cleared. Forecast did not match outcome.`);
+                    }
+                }
+            }
+
+            cpUserSelectedFocus = null;
+            document.getElementById('cp-target-selection').innerText = "None";
+        }
+
+        // =====================================================================
+        // TRANSACTION CHANNELS & OUTFLOW DISPATCH
+        // =====================================================================
+        function dispatchWithdrawalRequest() {
+            let upiPointer = document.getElementById('wallet-upi-input').value;
+            let sumVal = parseFloat(document.getElementById('wallet-amount-input').value);
+
+            if(!upiPointer || isNaN(sumVal) || sumVal < 500) {
+                return alert("Specify valid withdrawal criteria details (Minimum ₹500 required).");
+            }
+            if(walletBalance < sumVal) return alert("Insufficient platform funds to deploy request context.");
+
+            walletBalance -= sumVal;
+            updateUIWalletData();
+
+            activeCashoutRequests.push({ id: "TKT" + Math.floor(1000+Math.random()*9000), account: profileId, amount: sumVal, address: upiPointer, status: "pending" });
+            updateUIWalletData();
+            alert("Withdrawal settlement request queued safely.");
+        }
+
+        function renderAdminPanel() {
+            let rowWrapper = document.getElementById('admin-payout-rows');
+            rowWrapper.innerHTML = "";
+            let pendings = activeCashoutRequests.filter(r => r.status === 'pending');
+
+            if(pendings.length === 0) {
+                rowWrapper.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#6c757d;">No processing tickets pending validation bounds.</td></tr>`;
+                return;
+            }
+
+            activeCashoutRequests.forEach((req, index) => {
+                if(req.status === 'pending') {
+                    rowWrapper.innerHTML += `
+                        <tr>
+                            <td>${req.account}</td>
+                            <td>₹${req.amount}</td>
+                            <td>${req.address}</td>
+                            <td><button style="background:#28a745; border:none; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="clearPayoutRequest(${index})">Approve Balance</button></td>
+                        </tr>`;
+                }
+            });
+        }
+
+        function clearPayoutRequest(index) {
+            activeCashoutRequests[index].status = "approved";
+            updateUIWalletData();
+            renderAdminPanel();
+            alert("Ticket authorized. Balance payout cleared.");
+        }
+
+        // Launch Core Sequence Process Components
+        triggerAviatorLoopController();
+        initializeColorPredictionLoop();
+    </script>
+</body>
+</html>

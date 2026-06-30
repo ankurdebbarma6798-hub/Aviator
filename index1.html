@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>MegaWin Portal - Dual Engine Platform</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            background-color: #0b0c16;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 80px; /* Space for the bottom navbar */
+            overflow-x: hidden;
+        }
+
+        /* Balance & Profile Top Strip */
+        .top-status-bar {
+            width: 100%;
+            max-width: 500px;
+            background: #121424;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #1f233d;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .user-tag {
+            font-weight: bold;
+            font-size: 14px;
+            color: #8f9bba;
+        }
+        .user-tag span { color: #00ffcc; }
+
+        .wallet-pill {
+            background: #07080f;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid #2b3152;
+            font-weight: 800;
+            color: #28a745;
+            font-size: 16px;
+            text-shadow: 0 0 10px rgba(40,167,69,0.2);
+        }
+
+        /* App Screens Layout Container */
+        .app-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+        }
+        .app-container.active { display: flex; }
+
+        /* Global Typography & Input Elements */
+        h2 { font-size: 20px; margin-bottom: 15px; color: #fff; display: flex; align-items: center; gap: 8px;}
+        .card-panel {
+            background: #121424;
+            border: 1px solid #1f233d;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        /* -------------------------------------
+           AVIATOR STYLING 
+        ------------------------------------- */
+        .aviator-board {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background: radial-gradient(circle at 10% 90%, #1d122b 0%, #090a10 80%);
+            border-radius: 12px;
+            border: 1px solid #2c1f3d;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        #aviatorCanvas { width: 100%; height: 100%; }
+        .av-mult {
+            position: absolute;
+            top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 48px; font-weight: 900; text-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        .av-status {
+            position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 13px; font-weight: bold; color: #6c757d; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* -------------------------------------
+           COLOR PREDICTION STYLING
+        ------------------------------------- */
+        .color-timer-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #090a0f;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #1f233d;
+        }
+        .period-id { font-size: 12px; color: #8f9bba; }
+        .countdown-clock { font-size: 20px; font-weight: bold; color: #ffc107; }
+
+        .color-btn-grid {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .color-selector {
+            flex: 1; padding: 12px; border: none; border-radius: 8px;
+            font-size: 15px; font-weight: bold; color: white; cursor: pointer; text-transform: uppercase;
+        }
+        .bg-green { background: #28a745; box-shadow: 0 4px 12px rgba(40,167,69,0.3); }
+        .bg-violet { background: #6f42c1; box-shadow: 0 4px 12px rgba(111,66,193,0.3); }
+        .bg-red { background: #dc3545; box-shadow: 0 4px 12px rgba(220,53,69,0.3); }
+
+        .number-btn-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+        .num-selector {
+            background: #1c1e36; border: 1px solid #2b3152; color: #fff;
+            padding: 10px 0; border-radius: 6px; font-weight: bold; cursor: pointer;
+        }
+
+        /* Betting Controls Layout */
+        .bet-box-interface {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .input-group {
+            display: flex; align-items: center; background: #07080f; border-radius: 6px; border: 1px solid #2b3152; padding: 4px;
+        }
+        .input-group input {
+            flex: 1; background: transparent; border: none; color: white; text-align: center; font-size: 16px; font-weight: bold; outline: none;
+        }
+        .input-group button {
+            width: 35px; height: 35px; background: #1f233d; border: none; color: white; border-radius: 4px; font-weight: bold; cursor: pointer;
+        }
+
+        .action-submit-btn {
+            width: 100%; padding: 15px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; text-transform: uppercase; cursor: pointer;
+        }
+        .btn-green-action { background: #28a745; color: white; box-shadow: 0 4px 15px rgba(40,167,69,0.3); }
+        .btn-yellow-action { background: #ffc107; color: black; box-shadow: 0 4px 15px rgba(255,193,7,0.4); }
+        .btn-disabled-action { background: #1c1e36; color: #525a7a; cursor: not-allowed; }
+
+        /* History badge logging circles */
+        .badge-history-line {
+            display: flex; gap: 8px; overflow-x: auto; padding: 5px 0;
+        }
+        .circle-badge {
+            width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; flex-shrink: 0;
+        }
+
+        /* -------------------------------------
+           WALLET & REFERRALS STYLING
+        ------------------------------------- */
+        .referral-box {
+            background: #07080f; padding: 12px; border-radius: 8px; border: 1px dashed #2b3152; text-align: center; margin-top: 10px;
+        }
+        .cashout-row-item {
+            display: flex; justify-content: space-between; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 6px; margin-bottom: 6px; font-size: 13px;
+        }
+        .status-badge { padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;}
+        .status-pending { background: rgba(255,193,7,0.15); color: #ffc107;}
+        .status-approved { background: rgba(40,167,69,0.15); color: #28a745;}
+
+        /* -------------------------------------
+           ADMIN PANEL STYLING
+        ------------------------------------- */
+        .admin-table {
+            width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px;
+        }
+        .admin-table th, .admin-table td {
+            border: 1px solid #2b3152; padding: 8px; text-align: left;
+        }
+        .admin-table th { background: #1c1e36; }
+
+        /* Fixed Bottom Navigation Menu Bar */
+        .bottom-nav-menu {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 65px;
+            background: #121424; border-top: 2px solid #1f233d;
+            display: flex; justify-content: space-around; align-items: center; z-index: 999;
+        }
+        .nav-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: #6c757d; font-size: 11px; font-weight: 600; cursor: pointer;
+        }
+        .nav-item.active { color: #00ffcc; }
+        .nav-item svg { width: 22px; height: 22px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+    <div class="top-status-bar">
+        <div class="user-tag">ID: <span id="display-user-id">Loading...</span></div>
+        <div class="wallet-pill">₹<span id="display-wallet-bal">1000</span></div>
+    </div>
+
+    <div id="scr-aviator" class="app-container active">
+        <h2>✈️ Aviator Rocket Cruise</h2>
+        <div class="badge-history-line" id="aviator-history-row"></div>
+        <div class="aviator-board">
+            <canvas id="graphCanvas" width="480" height="220"></canvas>
+            <div class="av-mult" id="av-multiplier-text">1.00x</div>
+            <div class="av-status" id="av-status-text">Connecting Next Sequence</div>
+        </div>
+        <div class="card-panel">
+            <div class="bet-box-interface">
+                <div class="input-group">
+                    <button onclick="changeBetVal('av', -50)">-</button>
+                    <input type="number" id="av-bet-input" value="100" min="10">
+                    <button onclick="changeBetVal('av', 50)">+</button>
+                </div>
+                <button id="av-action-btn" class="action-submit-btn btn-green-action" onclick="triggerAviatorBet()">Place Flight Bet</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scr-color" class="app-container">
+        <h2>🎨 Quantum Color Forecast</h2>
+        <div class="color-timer-row">
+            <div>
+                <div class="period-id">Period Matrix</div>
+                <div id="cp-period-id" style="font-weight: bold;">2026031201</div>
+            </div>
+            <div>
+                <div class="period-id" style="text-align: right;">Time Left</div>
+                <div class="countdown-clock" id="cp-clock-text">00:30</div>
+            </div>
+        </div>
+
+        <div class="card-panel" style="padding: 10px;">
+            <div class="color-btn-grid">
+                <button class="color-selector bg-green" onclick="selectColorTarget('green')">Green</button>
+                <button class="color-selector bg-violet" onclick="selectColorTarget('violet')">Violet</button>
+                <button class="color-selector bg-red" onclick="selectColorTarget('red')">Red</button>
+            </div>
+            <div class="number-btn-grid">
+                <button class="num-selector" onclick="selectColorTarget(0)">0</button>
+                <button class="num-selector" onclick="selectColorTarget(1)">1</button>
+                <button class="num-selector" onclick="selectColorTarget(2)">2</button>
+                <button class="num-selector" onclick="selectColorTarget(3)">3</button>
+                <button class="num-selector" onclick="selectColorTarget(4)">4</button>
+                <button class="num-selector" onclick="selectColorTarget(5)">5</button>
+                <button class="num-selector" onclick="selectColorTarget(6)">6</button>
+                <button class="num-selector" onclick="selectColorTarget(7)">7</button>
+                <button class="num-selector" onclick="selectColorTarget(8)">8</button>
+                <button class="num-selector" onclick="selectColorTarget(9)">9</button>
+            </div>
+            <div class="bet-box-interface">
+                <div style="font-size: 13px; text-align: center; color: #ffc107;">
+                    Selected Target Focus: <span id="cp-target-display" style="font-weight: bold; text-transform: uppercase;">None</span>
+                </div>
+                <div class="input-group">
+                    <button onclick="changeBetVal('cp', -50)">-</button>
+                    <input type="number" id="cp-bet-input" value="100" min="10">
+                    <button onclick="changeBetVal('cp', 50)">+</button>
+                </div>
+                <button id="cp
